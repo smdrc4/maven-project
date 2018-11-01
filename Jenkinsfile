@@ -1,16 +1,6 @@
 pipeline {
     agent any
-    
-    parameters { 
-         string(name: 'tomcat_dev', defaultValue: 'http://87dd05d3.ngrok.io', description: 'Staging Server')
-         string(name: 'tomcat_prod', defaultValue: 'http://649bfd01.ngrok.io', description: 'Production Server')
-    } 
-
-    triggers {
-         pollSCM('* * * * *') // Polling Source Control
-     }
-
-stages{
+    stages{
         stage('Build'){
             steps {
                 sh 'mvn clean package'
@@ -22,20 +12,9 @@ stages{
                 }
             }
         }
-
-        stage ('Deployments'){
-            parallel{
-                stage ('Deploy to Staging'){
-                    steps {
-                        sh "scp -i /home/jenkins/tomcat-demo.pem **/target/*.war tomcat@${params.tomcat_dev}:/var/lib/tomcat8/webapps"
-                    }
-                }
-
-                stage ("Deploy to Production"){
-                    steps {
-                        sh "scp -i /home/jenkins/tomcat-demo.pem **/target/*.war tomcat@${params.tomcat_prod}:/var/lib/tomcat8/webapps"
-                    }
-                }
+        stage ('Deploy to Staging'){
+            steps {
+                build job: 'Deploy-to-staging'
             }
         }
     }
